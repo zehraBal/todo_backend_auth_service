@@ -16,6 +16,11 @@ public class AuthController {
 
     private final IAuthService authService;
 
+    @GetMapping("/validate-token")
+    public String getUserIdByToken(@RequestHeader("Authorization") String token) {
+        return authService.getUserIdByToken(token);
+    }
+
     @PostMapping("/register")
     public ResponseEntity<SignUpResponseDTO> register(@RequestBody SignUpRequestDTO signUpRequest) {
         SignUpResponseDTO response = authService.register(signUpRequest);

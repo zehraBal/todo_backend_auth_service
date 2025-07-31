@@ -25,6 +25,9 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
+    public String extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", String.class));
+    }
     // Public method to retrieve a specific claim (property) from the token
     public <T> T extractClaim(String token, Function<Claims,T> claimsResolver){
         final Claims claims=extractAllClaims(token);
@@ -32,9 +35,10 @@ public class JwtService {
     }
 
     // Generate a JWT token containing the username
-    public String generateToken(String username) {
+    public String generateToken(String userId,String username) {
         return Jwts.builder()
-                .setSubject(username) // "subject" → genellikle username olur
+                .setSubject(username)// "subject" → genellikle username olur
+                .claim("userId", userId)  // Özel claim olarak userId ekliyoruz
                 .setIssuedAt(new Date(System.currentTimeMillis())) // ne zaman üretildi
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS)) // 10 saat geçerli
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // HS256 algoritması ile imzala

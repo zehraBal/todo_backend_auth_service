@@ -50,10 +50,18 @@ public class AuthService implements IAuthService{
         }
 
         // 4. JWT token oluştur (username kullanarak)
-        String token = jwtService.generateToken(user.getUsername());
+        String token = jwtService.generateToken(user.getId(), user.getUsername());
 
         return new LoginResponseDTO(
                 token
         );
     }
+    @Override
+    public String getUserIdByToken(String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        return jwtService.extractUserId(token);
+    }
+
 }
