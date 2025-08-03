@@ -1,7 +1,6 @@
 package com.bal.auth_service.service;
 
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,65 +19,55 @@ public class JwtService {
     @Value("${jwt.expiration.ms}")
     private long EXPIRATION_MS;
 
-    // Get the username (subject) information from the token
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public String extractUserId(String token) {
-        return extractClaim(token, claims -> claims.get("userId", String.class));
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
     }
-    // Public method to retrieve a specific claim (property) from the token
-    public <T> T extractClaim(String token, Function<Claims,T> claimsResolver){
-        final Claims claims=extractAllClaims(token);
+
+    public <T> T extractClaim(String token, Function<Claims,T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    // Generate a JWT token containing the username
-    public String generateToken(String userId,String username) {
+    public String generateToken(Long userId, String username) {
         return Jwts.builder()
-                .setSubject(username)// "subject" → genellikle username olur
-                .claim("userId", userId)  // Özel claim olarak userId ekliyoruz
-                .setIssuedAt(new Date(System.currentTimeMillis())) // ne zaman üretildi
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS)) // 10 saat geçerli
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // HS256 algoritması ile imzala
-                .compact(); // Token'ı oluştur
+                .setSubject(username)
+                .claim("userId", userId)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    // Check if the token is valid or not
-    public boolean isTokenValid(String token,String username){
-        final String extractedUsername=extractUsername(token);
-        return extractedUsername.equals(username) && !isTokenExpired(token);
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Check if the token is expired or not
-    public boolean isTokenExpired(String token){
+    public boolean isTokenValid(String token, String username) {
+        final String extractedUsername = extractUsername(token);
+        return (extractedUsername.equals(username) && !isTokenExpired(token));
+    }
+
+    public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    // Retrieve expiration date from token
-    public Date extractExpiration(String token){
-        return extractClaim(token,Claims::getExpiration);
-
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 
-    // Public method to retrieve all claims from the token
     private Claims extractAllClaims(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
-
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();   // getBody()
+        try {
+            return Jwts.parser()
+                    .setSigningKey(getSigningKey())
+                    .build() // JwtParser oluşturuluyor
+                    .parseClaimsJws(token) // Token burada çözülüyor
+                    .getBody();
+        } catch (Exception e) {
+            throw new JwtException("JWT validation failed: " + e.getMessage());
+        }
     }
-    /*
-    * example Claims object
-    * {
-    * "sub": "user123",
-    * "iat": 1650264800,
-    * "exp": 1650268400
-    * }
-    * */
-
 }
