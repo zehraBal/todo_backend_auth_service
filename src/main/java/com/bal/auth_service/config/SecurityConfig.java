@@ -11,10 +11,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // CSRF'yi devre dışı bırak (Postman'de rahat test için)
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll() // Bu yollar herkese açık
-                        .anyRequest().authenticated() // Diğer tüm yollar auth gerektirir
+                        .requestMatchers("/api/auth/register", "/api/auth/login","/api/auth/validate-token").permitAll()
+                        .anyRequest().authenticated()
                 );
 
         return http.build();
