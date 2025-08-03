@@ -57,7 +57,7 @@ public class AuthService implements IAuthService{
         );
     }
     @Override
-    public String getUserIdByToken(String token) {
+    public Long getUserIdByToken(String token) {
         if (token != null && token.startsWith("Bearer ")) {
             token = token.substring(7);
         }

@@ -17,7 +17,7 @@ public class AuthController {
     private final IAuthService authService;
 
     @GetMapping("/validate-token")
-    public String getUserIdByToken(@RequestHeader("Authorization") String token) {
+    public Long getUserIdFromToken(@RequestHeader("Authorization") String token) {
         return authService.getUserIdByToken(token);
     }
 

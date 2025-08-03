@@ -10,5 +10,5 @@ public interface IAuthService {
 
     SignUpResponseDTO register(SignUpRequestDTO dto);
     LoginResponseDTO login(LoginRequestDTO dto);
-    String getUserIdByToken(String token);
+    Long getUserIdByToken(String token);
 }
